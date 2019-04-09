@@ -2,7 +2,7 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include <config.h>
+#include "config.h"
 
 #define WIFI_LED 26;
 #define MQTT_LED 27;
