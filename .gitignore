@@ -1,2 +1,6 @@
 
 src/config\.h
+
+\.pioenvs/
+
+\.vscode/
