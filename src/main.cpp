@@ -112,6 +112,11 @@ void loop() {
   if (!client.connected()) {
     connectMQTT();
   }
+
+  if ((WiFi.status() != WL_CONNECTED) && (millis() % 30000 == 0) ) {
+    connectWIFI();
+  }
+
   client.loop();
   captureTelegram();
 }
