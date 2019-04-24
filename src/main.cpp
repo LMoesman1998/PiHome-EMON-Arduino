@@ -10,38 +10,46 @@
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
 
-typedef enum { 
-   LISTENING,
-   READING
+typedef enum
+{
+  LISTENING,
+  READING
 } P1_STATE;
 
 P1_STATE state;
 String telegram;
 
-void connectWIFI() {
-  WiFi.setHostname(hostname);
+void connectWIFI()
+{
+  // WiFi.setHostname(hostname);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
 
   Serial.println("");
-  Serial.println("WiFi connected");  
+  Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 }
 
-void connectMQTT() {
+void connectMQTT()
+{
   /* Loop until reconnected */
-  while (!client.connected()) {
+  while (!client.connected())
+  {
     Serial.print("MQTT connecting ...");
     /* connect now */
-    if (client.connect(hostname, mqtt_username, mqtt_password)) {
+    if (client.connect(hostname, mqtt_username, mqtt_password))
+    {
       Serial.println("connected");
-    } else {
+    }
+    else
+    {
       Serial.print("failed, status code =");
       Serial.print(client.state());
       Serial.println("try again in 5 seconds");
@@ -51,7 +59,8 @@ void connectMQTT() {
   }
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200, SERIAL_8N1);
 
   //Read SD
@@ -65,57 +74,77 @@ void setup() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void telegram_store(String line) {
+void telegram_store(String line)
+{
   telegram += line;
 }
 
-void telegram_reset() {
+void telegram_reset()
+{
   telegram = "";
   state = LISTENING;
 }
 
-void captureTelegram() {
-  
-  if( Serial.available() ) { 
+void captureTelegram()
+{
+
+  if (Serial.available())
+  {
     Serial.println("t");
-    while( Serial.available() ) {
+    while (Serial.available())
+    {
       String telegramLine = Serial.readStringUntil('\n');
-        
-      switch (state) {
-        case LISTENING:
-          if (telegramLine[0] == '/') {
-            telegram_store(telegramLine);
-            state = READING;
-          }
-          break;
-        case READING:
+
+      switch (state)
+      {
+      case LISTENING:
+        if (telegramLine[0] == '/')
+        {
           telegram_store(telegramLine);
-          if (telegramLine[0] == '!') {
-            DynamicJsonBuffer jsonBuffer;
-            JsonObject& object = jsonBuffer.createObject();
-            object["telegram"] = telegram;
-            String telegramJSON;
-            object.printTo(telegramJSON);
-            client.publish("pihome-emon-4702", telegramJSON.c_str());
-            telegram_reset();
-          }
-          // Add Line
-          break;
-        default:
-          break;
+          state = READING;
+        }
+        break;
+      case READING:
+        telegram_store(telegramLine);
+        if (telegramLine[0] == '!')
+        {
+          DynamicJsonBuffer jsonBuffer;
+          JsonObject &object = jsonBuffer.createObject();
+          object["telegram"] = telegram;
+          String telegramJSON;
+          object.printTo(telegramJSON);
+          client.publish("pihome-emon-4702", telegramJSON.c_str());
+          telegram_reset();
+        }
+        // Add Line
+        break;
+      default:
+        break;
       }
     }
   }
 }
 
-void loop() {
-  if (!client.connected()) {
+void loop()
+{
+  if (!client.connected())
+  {
     connectMQTT();
   }
 
-  if ((WiFi.status() != WL_CONNECTED) && (millis() % 30000 == 0) ) {
-    connectWIFI();
-  }
+  // int wifi_retry = 0;
+  // while (WiFi.status() != WL_CONNECTED && wifi_retry < 5)
+  // {
+  //   wifi_retry++;
+  //   Serial.println("WiFi not connected. Try to reconnect");
+  //   WiFi.disconnect();
+  //   connectWIFI();
+  // }
+  // if (wifi_retry >= 5)
+  // {
+  //   Serial.println("\nReboot");
+  //   ESP.restart();
+  // }
 
   client.loop();
   captureTelegram();
