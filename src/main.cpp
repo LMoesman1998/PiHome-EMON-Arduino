@@ -21,8 +21,18 @@ String telegram;
 
 void connectWIFI()
 {
-  // WiFi.setHostname(hostname);
+  //  DO NOT TOUCH
+  //  This is here to force the ESP32 to reset the WiFi and initialise correctly.
+  Serial.print("WIFI status = ");
+  Serial.println(WiFi.getMode());
+  WiFi.disconnect(true);
+  delay(1000);
   WiFi.mode(WIFI_STA);
+  delay(1000);
+  Serial.print("WIFI status = ");
+  Serial.println(WiFi.getMode());
+  //  End silly stuff !!!
+
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED)
@@ -131,20 +141,6 @@ void loop()
   {
     connectMQTT();
   }
-
-  // int wifi_retry = 0;
-  // while (WiFi.status() != WL_CONNECTED && wifi_retry < 5)
-  // {
-  //   wifi_retry++;
-  //   Serial.println("WiFi not connected. Try to reconnect");
-  //   WiFi.disconnect();
-  //   connectWIFI();
-  // }
-  // if (wifi_retry >= 5)
-  // {
-  //   Serial.println("\nReboot");
-  //   ESP.restart();
-  // }
 
   client.loop();
   captureTelegram();
