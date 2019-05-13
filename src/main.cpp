@@ -49,6 +49,7 @@ void connectWIFI()
 
 void connectMQTT()
 {
+  int counter = 0;
   /* Loop until reconnected */
   while (!client.connected())
   {
@@ -56,13 +57,17 @@ void connectMQTT()
     /* connect now */
     if (client.connect(hostname, mqtt_username, mqtt_password))
     {
-      Serial.println("connected");
+      Serial.println("mqtt connected");
     }
     else
     {
+      if (counter == 3) {
+        ESP.restart();
+      }
       Serial.print("failed, status code =");
       Serial.print(client.state());
       Serial.println("try again in 5 seconds");
+      counter += 1;
       /* Wait 5 seconds before retrying */
       delay(5000);
     }
@@ -143,5 +148,8 @@ void loop()
   }
 
   client.loop();
+  if (millis() % 5001 == 0) {
+    Serial.println("Trying to capture telegram!");
+  }
   captureTelegram();
 }
